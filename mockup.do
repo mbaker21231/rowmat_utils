@@ -1,3 +1,5 @@
+do C:\users\matth\documents\github\rowmat_utils\rowmat_utils_mata.do
+
 mata
 
 i = 1
@@ -7,7 +9,7 @@ A =  1,2,.5 \ 0, 1.5, .4 \ .1, .1, 1.1
 XX = rowshape(A, 1)
 XX = XX#J(4,1,1)
 
-do C:\users\matth\documents\github\rowmat_utils\rowmat_utils_mata.do
+end
 
 mata
     real matrix rm_sqrt(real matrix A, real scalar tol, real scalar its)
