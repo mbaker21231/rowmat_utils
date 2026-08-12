@@ -1,0 +1,10 @@
+v 3
+d rowmat_utils: Mata functions for batched operations on square matrices stored rowwise
+d
+d Distribution-Date: 20260812
+d Author: Matthew J. Baker
+d Contact: mjbaker@hunter.cuny.edu
+d
+f lrowmat_utils.mlib
+f rowmat_utils.sthlp
+f mf_rowmat_utils.sthlp

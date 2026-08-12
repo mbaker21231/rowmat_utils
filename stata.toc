@@ -1,0 +1,3 @@
+v 3
+d Matthew J. Baker's Stata packages
+p rowmat_utils Batched Mata operations on square matrices stored rowwise
