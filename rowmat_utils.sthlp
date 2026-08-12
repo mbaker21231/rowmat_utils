@@ -1,13 +1,13 @@
 {smcl}
 {* Matthew J. Baker}
-{* 8aug2014}{...}
+{* 12aug2026}{...}
 {cmd:help rowmat_utils}
 {hline}
 
 {title:Title}
-aug
+
 {p 4 4 2}
-{bf:rowmat_utils -- Mata functions to manipulate (square) matrices in parallel collected as rows of a larger matrix}
+{bf:rowmat_utils -- Mata functions for batched operations on square matrices stored rowwise}
 
 {title:Contents}
 
@@ -32,24 +32,24 @@ aug
 {col 5}{bf:{help rowmat_utils##rm_absrowsums:rm_absrowsums()}{col 41} Compute (row) matrices' absolute value row sums}{...}
 
 
-{col 5}{bf:{help rowmat_utils##rm_absrowsums:rm_abscolsums()}{col 41} Compute (row) matrices' absolute value column sums}{...}
+{col 5}{bf:{help rowmat_utils##rm_abscolsums:rm_abscolsums()}{col 41} Compute (row) matrices' absolute value column sums}{...}
 
 
-{col 5}{bf:{help rowmat_utils##rm_alpha0:rm_alpha0()}{col 41} Compute initial matrices for (newton) inversion}{...}
+{col 5}{bf:{help rowmat_utils##rm_alpha0:rm_alpha0()}{col 41} Compute initial scaling values for (Newton) inversion}{...}
 
 
 {title:Description}
 
 {p 4 4 2}
 The functions above are designed for use in situations in which one wishes to do a large number of 
-matrix operations in parallel. For example, suppose that one has a data set consisting of N observations,
-where N is a large number, and, for each observation, matrix multiplication, transposition, inversion, etc. of some
-n -by- n matrix is required. Rather than looping over N observations and inverting a matrix for each observation, the routines above might 
-instead be employed by rendering each nXn matrix as a 1-by-(n^2) row vector and applying the above operations.
+matrix operations in vectorized form. For example, suppose that one has a data set consisting of N observations,
+where N is a large number, and for each observation, matrix multiplication, transposition, inversion, etc. of some
+n-by-n matrix is required. Rather than looping over N observations and inverting a matrix for each observation, the routines above might 
+instead be employed by rendering each n-by-n matrix as a 1-by-(n^2) row vector and applying the above operations.
  The above-listed operations perform
-the listed operations {it: in parallel}, looping over matrix entries, and therefore might run a bit faster than looping over observations. 
-For example, {com: newtinv()} could be used to compute inverses for a large
-number of observations in parallel. 
+the listed operations {it: simultaneously}, looping over matrix entries, and therefore might run a bit faster than looping over observations. 
+For example, {com: rm_newtinv()} could be used to compute inverses for a large
+number of observations simultaneously. 
 
 {p 4 4 2}
  
@@ -57,11 +57,11 @@ For examples as to how the above operations work, see the individual help entrie
 
 {hline}
 
-{title:Description of individidual operations}
+{title:Description of individual operations}
 
 {hline}
 {marker rm_matmult}
-{bf:rm_matmult() -- Multiply in parallel square matrices with entries written as single rows}
+{bf:rm_matmult() -- Multiply square matrices with entries written as single rows simultaneously }
 
 
 {title:Syntax}
@@ -82,8 +82,8 @@ where
 {title:Description}
 
 {pstd}
-{cmd:rm_matmult()} multiplies sequences of matrices in parallel. The idea is, in situations in which a large number
-of similar matrix multiplications must be carried out, to do so in parallel.
+{cmd:rm_matmult()} multiplies sequences of matrices simultaneously. The idea is, in situations in which a large number
+of similar matrix multiplications must be carried out, to do so simultaneously.
 
 {pstd}{it:X} and {it:Y} provide the sequences of matrices to be multiplied and must be of the same dimension. 
 
@@ -130,8 +130,9 @@ Consider the sets of matrices:
 {title:Conformability}
 
 {pstd}
-The rows of {it:X} and {it:Y} must be conformable square matrices. Thus, in general {it: X,Y} should 
-have 1,4,9,16,etc. rows and N columns. 
+{it:X} and {it:Y} must each be N-by-n^2 matrices, with each row representing
+one n-by-n matrix. {it:X} and {it:Y} must contain the same number of rows and
+represent matrices of the same dimension.
 {p_end}
 
 {title:Additional Comments}
@@ -140,13 +141,13 @@ have 1,4,9,16,etc. rows and N columns.
 No special attempt at efficiently multiplying the matrices has been made; 
 like other {bf:{help rowmat_utils}}, {com: rm_matmult()}
 might be useful in situations where the primary need is to do a large number of matrix multiplications and doing
-them in parallel conveys an advantage over looping over matrices. That is, looping is over entries of the matrix, not over matrices. 
+them in batched form conveys an advantage over looping over matrices. That is, looping is over entries of the matrix, not over matrices. 
 {p_end}
 
 {hline}
 {marker rm_matvecmult}
 
-{bf:rm_matvecmult() -- Multiply in parallel (square) matrices and vectors with entries written as single rows}
+{bf:rm_matvecmult() -- Multiply (square) matrices and vectors with entries written as single rows simultaneously}
 
 {title:Syntax}
 
@@ -166,8 +167,8 @@ where
 {title:Description}
 
 {pstd}
-{cmd:rm_matvecmult()} multiplies sequences of matrices and vectors in parallel. The idea is, in situations in which a large number
-of similar matrix-vector multiplications must be carried out, to do so in parallel.
+{cmd:rm_matvecmult()} multiplies sequences of matrices and vectors in batched form. The idea is, in situations in which a large number
+of similar matrix-vector multiplications must be carried out, to do so simultaneously.
 
 {pstd}{it:X} and {it:y} provide the sequences of matrices and vectors, respectively, 
 to be multiplied and must be conformable. 
@@ -182,7 +183,7 @@ Consider the sets of matrices and (column) vectors:
 {com}. mata: X2=2,3,4 \ 5,6,7 \ 8,9,10
 {com}. mata: y1=3 \4 \ 5
 {com}. mata: y2=4\ 5 \ 6  
-{com}. mata: X1*Y1
+{com}. mata: X1*y1
         {res}      {txt}  1 
             {c TLC}{hline 6}{c TRC}
           1 {c |}{res}  26{txt}  {c |}
@@ -190,7 +191,7 @@ Consider the sets of matrices and (column) vectors:
           3 {c |}{res}  98{txt}  {c |}
             {c BLC}{hline 6}{c BRC}
 
-{com}. mata: X2*Y2
+{com}. mata: X2*y2
         {res}      {txt}   1 
             {c TLC}{hline 6}{c TRC}
           1 {c |}{res}   47{txt} {c |}
@@ -203,7 +204,7 @@ Consider the sets of matrices and (column) vectors:
 {com}. mata: X=X1\X2
 {com}. mata: y1=y1'
 {com}. mata: y2=y2'
-{com}. mata: Y=y1\y2
+{com}. mata: y=y1\y2
 {com}. mata: rm_matvecmult(X,y)
 {res}              {txt}   1    2    3     
             {c TLC}{hline 17}{c TRC}
@@ -215,24 +216,23 @@ Consider the sets of matrices and (column) vectors:
 {title:Conformability}
 
 {pstd}
-{it:X} and {it:y} must be conformable; if the individual matrices represented by {it: X} is n-by-n (and therefore 1 -by- n^2 
-when written as a row, {it: y} should represent vectors that are n-by-1 (or 1 -by- n when
+{it:X} and {it:y} must be conformable; if the individual matrices represented by {it: X} are n-by-n (and therefore 1-by-n^2 
+when written as a row), {it: y} should represent vectors that are n-by-1 (or 1-by-n when
 represented as a row). Thus, {it: X} should be of dimension N-by-n^2 and y should be
 of dimension N-by-n.  
 {p_end}
 
 {title:Additional Comments}
 {pstd}
-No special attempt at efficiently executing matrix-vector multiplication has
-been attempted. Like other {bf:{help rowmat_utils}}, {com: rm_matvecmult()}
+No special optimization of the matrix-vector multiplication routine has been attempted. Like other {bf:{help rowmat_utils}}, {com: rm_matvecmult()}
 will be used in situations where the primary need is to do a large number of matrix-vector multiplications and doing
-them in parallel conveys an advantage over looping. Looping is over entries of the matrix, not over matrices. 
+them simultaneously conveys an advantage over looping. Looping is over entries of the matrix, not over matrices. 
 {p_end}
 
 {hline}
 {marker rm_vecvecmult}
 
-{bf:rm_vecvecmult() -- Scalar (dot) products of vectors in parallel, with entries written as single rows}
+{bf:rm_vecvecmult() -- Scalar (dot) products of vectors in batch form, with entries written as single rows}
 
 
 {title:Syntax}
@@ -253,8 +253,8 @@ where
 {title:Description}
 
 {pstd}
-{cmd:rm_vecvecmult()} multiplies sequences of vectors in parallel. The idea is, in situations in which a large number
-of similar vector-vector multiplications must be carried out, to do so in parallel.
+{cmd:rm_vecvecmult()} multiplies sequences of vectors simultaneously. The idea is, in situations in which a large number
+of similar vector-vector multiplications must be carried out, to do so simultaneously.
 
 {pstd}{it:x} and {it:y} provide the sequences of vectors to be multiplied and must be conformable. 
 
@@ -277,6 +277,8 @@ Consider the sets of matrices and (column) vectors:
 {com}. mata: x1=x1'
 {com}. mata: x2=x2'
 {com}. mata: x=x1\x2
+{com}. mata: y1=y1'
+{com}. mata: y2=y2'
 {com}. mata: y=y1\y2
 {com}. mata: rm_vecvecmult(x,y)
 {res}           {txt}   1      
@@ -289,24 +291,23 @@ Consider the sets of matrices and (column) vectors:
 {title:Conformability}
 
 {pstd}
-{it:x} and {it:y} must be conformable (i. e., vectors of the same length). Thus, {it: x} should be of  dimension N-by-n 
+{it:x} and {it:y} must be conformable (i.e., vectors of the same length). Thus, {it: x} should be of  dimension N-by-n 
 and y should be of dimension N-by-n.  
 {p_end}
 
 {title:Additional Comments}
 
 {pstd}
-No special attempt at efficiently executing vector-vector multiplication has
-been attempted. Like other {bf:{help rowmat_utils}}, {com: rm_vecvecmult()}
-will be useful in situations where the primary need is to do a large number of matrix-vector multiplications and doing
-them in parallel conveys an advantage over looping. In fact, {com: rm_vecvecmult()} is identical to computing the row products
-using the colon operator; in the example, this would be, {bf: rowsum(X:*Y)}.
+No special optimization of vector-vector multiplication has
+been attempted. Like other {bf:{help rowmat_utils}}, {com: rm_vecvecmult()} 
+will be useful in situations where the primary need is to do a large number of vector dot products  and doing them in batch form conveys an advantage over looping. In fact, {com: rm_vecvecmult()} is identical to computing the row products
+using the colon operator; in the example, this would be, {bf: rowsum(x:*y)}.
 {p_end}
 
 {hline}
 {marker rm_newtinv}
 
-{bf:rm_newtinv() -- Invert a sequence of matrices written as rows of a larger matrix in parallel using Newton iteration}
+{bf:rm_newtinv() -- Invert a sequence of matrices written as rows of a larger matrix simultaneously using Newton iteration}
 
 {title:Syntax}
 
@@ -320,40 +321,40 @@ where
   {it:A}:  {it:real matrix} containing data (each row of which represents the entries, in order, of a square matrix)
   {p_end}
 {p 5 21 2}
-  {it:maxiter}:  {it:real scalar} containing the number of maximum iterations {cmd: rm_newtinv()} will do in finding inverses. Often, a relatively 
+  {it:maxiter}:  {it:real scalar} specifying the maximum number of iterations {cmd: rm_newtinv()} will do in finding inverses. Often, a relatively 
   small number of iterations is sufficient (i.e., in the neighborhood of 20 maximum iterations)
   {p_end}
 {p 8 21 2}
-  {it:crit}: {it:real scalar} containing the convergence criterion; when improvements across all matrices are smaller than this value,
-  {cmd: rm_newtinv()} stops. A suitable criterion might be something in the neighborhoood of 1e-12.
+  {it:crit}: {it:real scalar} containing the convergence criterion; when the maximum absolute elementwise change between successive iterations across all matrices is smaller than this value,
+  {cmd: rm_newtinv()} stops. A suitable criterion might be something in the neighborhood of 1e-12.
 
 {title:Description}
 
 {pstd}
 {cmd:rm_newtinv()} carries out simultaneous matrix inversion of a sequence of matrices which are all written as rows of a larger data matrix. 
-{cmd:rm_newtinv()} uses all the mata functions listed in {bf:{help rowmat_utils}} to accomplish this. The idea is to accomplish matrix inversion
-of the sequence of matrices in parallel, avoiding having to loop over matrices to find inverses. 
+{cmd:rm_newtinv()} uses all the Mata functions listed in {bf:{help rowmat_utils}} to accomplish this. The idea is to accomplish matrix inversion
+of the sequence of matrices simultaneously, avoiding having to loop over matrices to find inverses. 
 
 {title:Remarks}
 
-{pstd}The approach followed by {cmd: rm_newtinv()} is outlined in Pan and Schreiber (1990), who build on Shulz (1933), which originally proposed newton iteration
+{pstd}The approach followed by {cmd: rm_newtinv()} is outlined in Pan and Schreiber (1991), who build on Schulz (1933), who originally proposed Newton iteration
 for computing the inverse of a nonsingular matrix A. 
 
-{pstd}Consider a sequence of matrices, X[k],k=0,1,3,...,n. The inverse of A is sought. Newton inversion proceeds by iterating 
+{pstd}Consider a sequence of matrices, X[k],k=0,1,2,...,n. The inverse of A is sought. Newton inversion proceeds by iterating 
 
 {p 8 21 2}X[k+1]=X[k](2I-AX[k])
 
 {pstd}Until convergence of the sequence of matrices X[k]. The resulting matrix X[k] is an (arbitrarily close) approximation of the inverse of A. 
 While there are more efficient and stable ways to invert a single matrix, Newton iteration has the advantage in that it is easily applied to many
-matrices in parallel, and is relatively stable. 
+matrices all at once, and is relatively stable. 
 
-{pstd}Of course, any iterative procedure requires a starting point, and convergence often depends upon good starting values. Pan and Schreiber (1990)
-note that Ben-Israel and Cohen (1966) show that for a sufficiently small value of a scalar a0, X[0]=a0*A', results in convergence. While one can achieve more rapid
-convergence with other choices of a, Pan and Schreiber (1990) show that choosing:
+{pstd}Of course, any iterative procedure requires a starting point, and convergence often depends upon good starting values. Pan and Schreiber (1991)
+note that Ben-Israel and Cohen (1966) show that for a sufficiently small value of a scalar a0, X[0]=a0*A' results in convergence. While one can achieve more rapid
+convergence with other choices of a0, Pan and Schreiber (1991) show that choosing:
 
 {p 8 21 2}a0=1/(A_1*A_inf)
 
-{pstd}where A_1 denotes the largest of the absolute value of the row sums of the matrix, and A_inf is the largest of the absolute value of the column sums of
+{pstd}where A_1 denotes the maximum column sum of absolute values of the matrix, and A_inf is the maximum row sum of absolute values of
 the matrix A (the p=1 norm and the p=infinity norm of the matrix A, respectively). The companion function {bf:{help rowmat_utils##rm_alpha0:rm_alpha0()}} calculates this starting value
 for matrices written in row form. 
 
@@ -374,7 +375,7 @@ Consider the sets of matrices:
 {com}. mata: luinv(A2)
         {res}      {txt}           1              2              3
             {c TLC}{hline 45}{c TRC}
-          1 {c |}{res}  1.833333333    .1666666667   -1.666666667{txt}  {c |}
+          1 {c |}{res}  1.833333333    .1666666667   -1.166666667{txt}  {c |}
           2 {c |}{res} -1.666666667   -.3333333333    1.333333333{txt}  {c |}
           3 {c |}{res}           .5             .5            -.5{txt}  {c |}
             {c BLC}{hline 45}{c BRC}
@@ -385,8 +386,8 @@ Consider the sets of matrices:
 {com}. mata: rm_newtinv(A,30,1e-12)
         {res}      {txt}           1              2              3              4             5              6              7             8              9
             {c TLC}{hline 133}{c TRC}
-          1 {c |}{res} -.2857142857   -.1428571429             .5    .3333333333   1.27202e-17   -.1666666667   -0.952380952   .2857142857   -.1666666667{txt}  {c |}
-          2 {c |}{res}  1.833333333    .1666666667   -1.166666667   -1.666666667   -.333333333    1.333333333             .5            .5             .5{txt}  {c |}
+          1 {c |}{res} -.2857142857   -.1428571429             .5    .3333333333   1.27202e-17   -.1666666667   -0.0952380952   .2857142857   -.1666666667{txt} {c |}
+          2 {c |}{res}  1.833333333    .1666666667   -1.166666667   -1.666666667   -.333333333    1.333333333             .5            .5             -.5{txt} {c |}
             {c BLC}{hline 133}{c BRC}
 
 		
@@ -394,8 +395,8 @@ Consider the sets of matrices:
 {title:Conformability}
 
 {pstd}
-The rows of {it:A} must be conformable square matrices. Thus, in general {it: A} should 
-have 1,4,9,16,etc. rows and N columns, where N is some number of matrices that need to be inverted. 
+{it:A} must be an N-by-n^2 matrix, with each row representing one
+n-by-n matrix to be inverted.
 {p_end}
 
 {title:Additional Comments}
@@ -420,13 +421,13 @@ and inverting each one, with the combined tasks of successive iterations and loo
 where
 
 {p 12 18 2}
-  {it:X}:  {it:real matrix} containing data (each row of which represents the entries of a vector)
+  {it:X}:  {it:real matrix} containing data (each row of which represents the entries of a square matrix)
   {p_end}
 
 {title:Description}
 
 {pstd}
-{cmd:rm_transpose()} computes the transposes of a group of matrices, each of which is written in single-row form, in parallel. The
+{cmd:rm_transpose()} computes the transposes of a group of matrices simultaneously, each of which is written in single-row form. The
 idea is to avoid looping over a large number of matrices.
 
 {pstd}Examples:
@@ -472,7 +473,7 @@ Consider the sets of matrices:
 The intent is that,
 like other {bf:{help rowmat_utils}}, {cmd: rm_transpose()}
 will be useful in situations where the primary need is to do a large number of matrix computations and doing
-them in parallel conveys an advantage over looping. Essentially, {cmd: rm_transpose()} replaces the task of looping over matrices
+them in batch form conveys an advantage over looping. Essentially, {cmd: rm_transpose()} replaces the task of looping over matrices
 with the task of looping over the entries of many matrices simultaneously. 
 {p_end}
 
@@ -485,7 +486,7 @@ with the task of looping over the entries of many matrices simultaneously.
 {title:Syntax}
 
 {p 11 18 2}
-{it:real matrix} {cmd:absrowsums(}{it:real matrix X})
+{it:real matrix} {cmd:rm_absrowsums(}{it:real matrix X})
 
 {p 4 4 2}
 where
@@ -497,12 +498,11 @@ where
 {title:Description}
 
 {pstd}
-{cmd:rm_absrowsums()} computes the row sums of the absolute values of a matrix, where each matrix is written in single-row form,
- in parallel. The idea is to perform the operation while avoiding looping over a large number of matrices.
+{cmd:rm_absrowsums()} computes the row sums of the absolute values of a matrix simultaneously, where each matrix is written in single-row form. The idea is to perform the operation while avoiding looping over a large number of matrices.
 
 {pstd}Examples:
 
-Consider the sets of matrices and (column) vectors: 
+Consider the following matrices: 
 
 {com}. mata: X1=1,-2,3 \ 4,5,-6 \ 7,-8,9 
 {com}. mata: X2=2,-3,4 \ 5,-6,7 \ 8,-9,10
@@ -544,7 +544,7 @@ Consider the sets of matrices and (column) vectors:
 {pstd}
 Like other {bf:{help rowmat_utils}}, {com: rm_absrowsums()}
 will be useful in situations where the primary need is to do a large number of matrix computations and doing
-them in parallel conveys an advantage over looping. Looping is over entries in the matrix, not over matrices.
+them in batch form conveys an advantage over looping. Looping is over entries in the matrix, not over matrices.
 {p_end}
 
 {hline}
@@ -568,12 +568,11 @@ where
 {title:Description}
 
 {pstd}
-{cmd:rm_abscolsums()} computes the row sums of the absolute values of a matrix, where each matrix is written in single-row form,
- in parallel. The idea is to perform the operation while avoiding looping over a large number of matrices.
+{cmd:rm_abscolsums()} computes the column sums of the absolute values of a matrix simultaneously, where each matrix is written in single-row form. The idea is to perform the operation while avoiding looping over a large number of matrices.
 
 {pstd}Examples:
 
-Consider the sets of matrices and (column) vectors: 
+Consider the following matrices: 
 
 {com}. mata: X1=1,-2,3 \ 4,5,-6 \ 7,-8,9 
 {com}. mata: X2=2,-3,4 \ 5,-6,7 \ 8,-9,10
@@ -610,16 +609,36 @@ Consider the sets of matrices and (column) vectors:
 {pstd}
 Like other {bf:{help rowmat_utils}}, {com: rm_abscolsums()}
 might be useful in situations where the primary need is to do a large number of matrix computations and doing
-them in parallel conveys an advantage over looping. The operation is performed by looping over entries in the matrix, and not
+them simultaneously conveys an advantage over looping. The operation is performed by looping over entries in the matrix, and not
 looping over matrices. 
 {p_end}
 
 {hline}
 {marker rm_alpha0}
-{bf:rm_alpha0() -- Provides starting values for {cmd: rm_newtinv()}.}
+{bf:rm_alpha0() -- Compute starting scaling values for {cmd:rm_newtinv()}.}
+
+{title:Syntax}
+
+{p 11 18 2}
+{it:real matrix} {cmd:rm_alpha0(}{it:real matrix A})
+
+{title:Description}
 
 {pstd}
-For details and description see {bf:{help mf_rm_newtinv:rm_newtinv()}} and {bf:{help rowmat_utils}}.
+{cmd:rm_alpha0()} computes one initial scaling value for each n-by-n
+matrix stored as a row of {it:A}. These values are used to initialize
+{cmd:rm_newtinv()}.
+
+{title:Conformability}
+
+{pstd}
+{it:A} must be an N-by-n^2 matrix, with each row representing one
+n-by-n matrix.
+{p_end}
+
+{pstd}
+For details on the initialization used in Newton inversion, see
+{bf:{help rowmat_utils##rm_newtinv:rm_newtinv()}}.
 
 {title:References}
 
@@ -627,7 +646,7 @@ For details and description see {bf:{help mf_rm_newtinv:rm_newtinv()}} and {bf:{
 
 {phang}Pan, V. and R. Schreiber. 1991. "An improved Newton iteration for the generalized inverse of a matrix, with applications," SIAM Journal of Scientific and Statistical Computing 12:1109-31.
 
-{phang}Schultz, G. 1933. "Iterative berechnung der Reziproken Matrix," Zeitschrift fuer Angewandte Mathematik and Mechanik 13: 57-9.
+{phang}Schulz, G. 1933. "Iterative berechnung der Reziproken Matrix," Zeitschrift fuer Angewandte Mathematik und Mechanik 13: 57-9.
 
 {title:Author}
 
